@@ -233,6 +233,22 @@ class TestCheck:
         assert documented_func.__name__ == "documented_func"
         assert documented_func.__doc__ == "This is a docstring."
 
+    def test_check_empty_decorator(self):
+        """Test @check() with no parameters - should be a no-op."""
+        @check()
+        def any_output():
+            return "anything goes"
+
+        # Should work without any validation
+        assert any_output() == "anything goes"
+
+        @check()
+        def returns_none():
+            return None
+
+        # Even None should pass with no checks
+        assert returns_none() is None
+
 
 class TestValidationError:
     def test_error_attributes(self):
