@@ -195,7 +195,11 @@ class Expectation:
         return self
 
     def equals(self, expected: Any) -> Expectation:
-        """Assert that the value equals the expected value."""
+        """Assert that the value equals the expected value.
+
+        Note: Uses != for comparison. May not work as expected with numpy
+        arrays or pandas DataFrames where comparison returns arrays.
+        """
         if self._value != expected:
             raise ValidationError(
                 f"Expected {expected!r}, got {self._value!r}",
@@ -205,7 +209,11 @@ class Expectation:
         return self
 
     def is_type(self, expected_type: type) -> Expectation:
-        """Assert that the value is of the expected type."""
+        """Assert that the value is of the expected type.
+
+        Note: Uses isinstance() which doesn't work with typing generics
+        like List[int]. Use concrete types (list, dict, etc.) instead.
+        """
         if not isinstance(self._value, expected_type):
             raise ValidationError(
                 f"Expected type {expected_type.__name__}, "
