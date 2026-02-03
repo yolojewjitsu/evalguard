@@ -77,7 +77,14 @@ class Expectation:
     def matches(self, pattern: str | Pattern[str]) -> Expectation:
         """Assert that the value matches the given regex pattern."""
         if isinstance(pattern, str):
-            pattern = re.compile(pattern)
+            try:
+                pattern = re.compile(pattern)
+            except re.error as e:
+                raise ValidationError(
+                    f"Invalid regex pattern: {e}",
+                    value=self._value,
+                    rule="matches",
+                ) from e
         if not pattern.search(self._str_value):
             raise ValidationError(
                 f"Expected value to match pattern {pattern.pattern!r}",
@@ -89,7 +96,14 @@ class Expectation:
     def not_matches(self, pattern: str | Pattern[str]) -> Expectation:
         """Assert that the value does not match the given regex pattern."""
         if isinstance(pattern, str):
-            pattern = re.compile(pattern)
+            try:
+                pattern = re.compile(pattern)
+            except re.error as e:
+                raise ValidationError(
+                    f"Invalid regex pattern: {e}",
+                    value=self._value,
+                    rule="not_matches",
+                ) from e
         if pattern.search(self._str_value):
             raise ValidationError(
                 f"Expected value to not match pattern {pattern.pattern!r}",
@@ -257,7 +271,8 @@ def check(
         not_empty: If True, validate that output is not empty.
         satisfies: Custom predicate function.
         on_fail: Optional callback on validation failure. If provided and returns
-                 a value, that value is returned instead of raising.
+                 a non-None value, that value is returned instead of raising.
+                 If it returns None, None is returned (not the original result).
 
     Raises:
         ValidationError: If any validation fails (unless on_fail handles it).

@@ -113,6 +113,20 @@ class TestEdgeCases:
         @check(contains=["missing"], on_fail=lambda e: None)
         def func():
             return "no match"
-        
+
         # Should return None from handler
         assert func() is None
+
+    def test_invalid_regex_matches(self):
+        """Test that invalid regex raises ValidationError, not re.error."""
+        with pytest.raises(ValidationError) as exc:
+            expect("test").matches("[invalid")
+        assert "Invalid regex" in exc.value.message
+        assert exc.value.rule == "matches"
+
+    def test_invalid_regex_not_matches(self):
+        """Test that invalid regex raises ValidationError in not_matches."""
+        with pytest.raises(ValidationError) as exc:
+            expect("test").not_matches("(unclosed")
+        assert "Invalid regex" in exc.value.message
+        assert exc.value.rule == "not_matches"
