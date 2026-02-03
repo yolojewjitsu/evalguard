@@ -156,7 +156,7 @@ EvalGuard is part of a reliability suite for AI agents:
 
 - **[LoopGuard](https://pypi.org/project/loopguard/)** - Prevent infinite loops
 - **EvalGuard** - Validate outputs (this package)
-- **FailGuard** - Detect drift and silent failures (coming soon)
+- **[FailGuard](https://pypi.org/project/failguard/)** - Detect drift and silent failures
 
 ## License
 

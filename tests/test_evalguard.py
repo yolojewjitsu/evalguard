@@ -240,3 +240,38 @@ class TestValidationError:
         err = ValidationError("test", rule="contains")
         assert "ValidationError" in repr(err)
         assert "contains" in repr(err)
+
+
+class TestCheckMoreCases:
+    def test_check_not_matches(self):
+        """Test @check with not_matches parameter."""
+        @check(not_matches=r"\d+")
+        def no_numbers():
+            return "hello world"
+
+        assert no_numbers() == "hello world"
+
+    def test_check_not_matches_list(self):
+        """Test @check with not_matches as list."""
+        @check(not_matches=[r"DROP", r"DELETE"])
+        def safe_query():
+            return "SELECT * FROM users"
+
+        assert safe_query() == "SELECT * FROM users"
+
+    def test_check_min_length(self):
+        """Test @check with min_length parameter."""
+        @check(min_length=5)
+        def long_enough():
+            return "hello world"
+
+        assert long_enough() == "hello world"
+
+    def test_check_min_length_fails(self):
+        """Test @check with min_length failure."""
+        @check(min_length=100)
+        def too_short():
+            return "hi"
+
+        with pytest.raises(ValidationError):
+            too_short()

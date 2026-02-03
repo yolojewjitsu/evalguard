@@ -1,6 +1,6 @@
 """EvalGuard - Simple validation for AI agent outputs."""
 
-from .core import check, expect, ValidationError, Expectation
+from .core import Expectation, ValidationError, check, expect
 
 __version__ = "0.1.0"
-__all__ = ["check", "expect", "ValidationError", "Expectation", "__version__"]
+__all__ = ["Expectation", "ValidationError", "__version__", "check", "expect"]

@@ -5,9 +5,10 @@ from __future__ import annotations
 import json
 import re
 from functools import wraps
-from typing import Any, Callable, Optional, Pattern, TypeVar, Union
+from re import Pattern
+from typing import Any, Callable, TypeVar
 
-__all__ = ["check", "expect", "ValidationError", "Expectation"]
+__all__ = ["Expectation", "ValidationError", "check", "expect"]
 
 T = TypeVar("T")
 
@@ -19,11 +20,17 @@ class ValidationError(Exception):
         message: Description of the validation failure.
         value: The value that failed validation.
         rule: The rule that was violated.
+
     """
 
-    __slots__ = ("message", "value", "rule")
+    __slots__ = ("message", "rule", "value")
 
-    def __init__(self, message: str, value: Any = None, rule: Optional[str] = None):
+    def __init__(
+        self,
+        message: str,
+        value: Any = None,
+        rule: str | None = None,
+    ) -> None:
         self.message = message
         self.value = value
         self.rule = rule
@@ -38,15 +45,16 @@ class Expectation:
 
     Example:
         expect(result).contains("SELECT").not_contains("DROP").valid_json()
+
     """
 
-    __slots__ = ("_value", "_str_value")
+    __slots__ = ("_str_value", "_value")
 
-    def __init__(self, value: Any):
+    def __init__(self, value: Any) -> None:
         self._value = value
         self._str_value = str(value) if value is not None else ""
 
-    def contains(self, substring: str) -> "Expectation":
+    def contains(self, substring: str) -> Expectation:
         """Assert that the value contains the given substring."""
         if substring not in self._str_value:
             raise ValidationError(
@@ -56,7 +64,7 @@ class Expectation:
             )
         return self
 
-    def not_contains(self, substring: str) -> "Expectation":
+    def not_contains(self, substring: str) -> Expectation:
         """Assert that the value does not contain the given substring."""
         if substring in self._str_value:
             raise ValidationError(
@@ -66,7 +74,7 @@ class Expectation:
             )
         return self
 
-    def matches(self, pattern: Union[str, Pattern[str]]) -> "Expectation":
+    def matches(self, pattern: str | Pattern[str]) -> Expectation:
         """Assert that the value matches the given regex pattern."""
         if isinstance(pattern, str):
             pattern = re.compile(pattern)
@@ -78,7 +86,7 @@ class Expectation:
             )
         return self
 
-    def not_matches(self, pattern: Union[str, Pattern[str]]) -> "Expectation":
+    def not_matches(self, pattern: str | Pattern[str]) -> Expectation:
         """Assert that the value does not match the given regex pattern."""
         if isinstance(pattern, str):
             pattern = re.compile(pattern)
@@ -90,7 +98,7 @@ class Expectation:
             )
         return self
 
-    def valid_json(self) -> "Expectation":
+    def valid_json(self) -> Expectation:
         """Assert that the value is valid JSON."""
         try:
             json.loads(self._str_value)
@@ -99,10 +107,10 @@ class Expectation:
                 f"Expected valid JSON: {e}",
                 value=self._value,
                 rule="valid_json",
-            )
+            ) from e
         return self
 
-    def max_length(self, length: int) -> "Expectation":
+    def max_length(self, length: int) -> Expectation:
         """Assert that the value length is at most the given length."""
         if len(self._str_value) > length:
             raise ValidationError(
@@ -112,7 +120,7 @@ class Expectation:
             )
         return self
 
-    def min_length(self, length: int) -> "Expectation":
+    def min_length(self, length: int) -> Expectation:
         """Assert that the value length is at least the given length."""
         if len(self._str_value) < length:
             raise ValidationError(
@@ -122,7 +130,7 @@ class Expectation:
             )
         return self
 
-    def not_empty(self) -> "Expectation":
+    def not_empty(self) -> Expectation:
         """Assert that the value is not empty."""
         if not self._str_value.strip():
             raise ValidationError(
@@ -132,7 +140,7 @@ class Expectation:
             )
         return self
 
-    def equals(self, expected: Any) -> "Expectation":
+    def equals(self, expected: Any) -> Expectation:
         """Assert that the value equals the expected value."""
         if self._value != expected:
             raise ValidationError(
@@ -142,17 +150,22 @@ class Expectation:
             )
         return self
 
-    def is_type(self, expected_type: type) -> "Expectation":
+    def is_type(self, expected_type: type) -> Expectation:
         """Assert that the value is of the expected type."""
         if not isinstance(self._value, expected_type):
             raise ValidationError(
-                f"Expected type {expected_type.__name__}, got {type(self._value).__name__}",
+                f"Expected type {expected_type.__name__}, "
+                f"got {type(self._value).__name__}",
                 value=self._value,
                 rule="is_type",
             )
         return self
 
-    def satisfies(self, predicate: Callable[[Any], bool], description: str = "custom predicate") -> "Expectation":
+    def satisfies(
+        self,
+        predicate: Callable[[Any], bool],
+        description: str = "custom predicate",
+    ) -> Expectation:
         """Assert that the value satisfies the given predicate."""
         if not predicate(self._value):
             raise ValidationError(
@@ -179,24 +192,25 @@ def expect(value: Any) -> Expectation:
 
     Returns:
         An Expectation object for chaining validations.
+
     """
     return Expectation(value)
 
 
 def check(
     *,
-    contains: Optional[list[str]] = None,
-    not_contains: Optional[list[str]] = None,
-    matches: Optional[Union[str, Pattern[str], list[Union[str, Pattern[str]]]]] = None,
-    not_matches: Optional[Union[str, Pattern[str], list[Union[str, Pattern[str]]]]] = None,
+    contains: list[str] | None = None,
+    not_contains: list[str] | None = None,
+    matches: str | Pattern[str] | list[str | Pattern[str]] | None = None,
+    not_matches: str | Pattern[str] | list[str | Pattern[str]] | None = None,
     valid_json: bool = False,
-    max_length: Optional[int] = None,
-    min_length: Optional[int] = None,
+    max_length: int | None = None,
+    min_length: int | None = None,
     not_empty: bool = False,
-    satisfies: Optional[Callable[[Any], bool]] = None,
-    on_fail: Optional[Callable[[ValidationError], Any]] = None,
+    satisfies: Callable[[Any], bool] | None = None,
+    on_fail: Callable[[ValidationError], Any] | None = None,
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
-    """Decorator to validate function return values.
+    """Validate function return values with a decorator.
 
     Example:
         @check(contains=["SELECT"], not_contains=["DROP", "DELETE"])
@@ -218,6 +232,7 @@ def check(
 
     Raises:
         ValidationError: If any validation fails (unless on_fail handles it).
+
     """
 
     def decorator(fn: Callable[..., T]) -> Callable[..., T]:
@@ -240,12 +255,18 @@ def check(
                         exp.not_contains(s)
 
                 if matches:
-                    patterns = [matches] if isinstance(matches, (str, Pattern)) else matches
+                    if isinstance(matches, (str, Pattern)):
+                        patterns = [matches]
+                    else:
+                        patterns = matches
                     for p in patterns:
                         exp.matches(p)
 
                 if not_matches:
-                    patterns = [not_matches] if isinstance(not_matches, (str, Pattern)) else not_matches
+                    if isinstance(not_matches, (str, Pattern)):
+                        patterns = [not_matches]
+                    else:
+                        patterns = not_matches
                     for p in patterns:
                         exp.not_matches(p)
 
