@@ -131,8 +131,37 @@ class Expectation:
         return self
 
     def not_empty(self) -> Expectation:
-        """Assert that the value is not empty."""
-        if not self._str_value.strip():
+        """Assert that the value is not empty.
+
+        For strings: checks that the stripped value is non-empty.
+        For collections (list, dict, set, tuple): checks length > 0.
+        For other types: checks truthiness.
+        """
+        # Handle None explicitly
+        if self._value is None:
+            raise ValidationError(
+                "Expected non-empty value, got None",
+                value=self._value,
+                rule="not_empty",
+            )
+        # Handle strings: check stripped content
+        if isinstance(self._value, str):
+            if not self._value.strip():
+                raise ValidationError(
+                    "Expected non-empty value",
+                    value=self._value,
+                    rule="not_empty",
+                )
+        # Handle collections: check length
+        elif isinstance(self._value, (list, dict, set, tuple)):
+            if len(self._value) == 0:
+                raise ValidationError(
+                    f"Expected non-empty {type(self._value).__name__}",
+                    value=self._value,
+                    rule="not_empty",
+                )
+        # Handle other types: check truthiness
+        elif not self._value:
             raise ValidationError(
                 "Expected non-empty value",
                 value=self._value,

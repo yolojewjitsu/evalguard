@@ -16,9 +16,56 @@ class TestEdgeCases:
         """Test validation on None - converts to empty string."""
         # None becomes "" for string comparisons
         expect(None).max_length(0)
-        
+
         with pytest.raises(ValidationError):
             expect(None).contains("anything")
+
+        # None should fail not_empty
+        with pytest.raises(ValidationError) as exc:
+            expect(None).not_empty()
+        assert "None" in exc.value.message
+
+    def test_empty_list_not_empty(self):
+        """Test not_empty with empty list."""
+        with pytest.raises(ValidationError) as exc:
+            expect([]).not_empty()
+        assert "list" in exc.value.message.lower()
+
+        # Non-empty list should pass
+        expect([1, 2, 3]).not_empty()
+
+    def test_empty_dict_not_empty(self):
+        """Test not_empty with empty dict."""
+        with pytest.raises(ValidationError) as exc:
+            expect({}).not_empty()
+        assert "dict" in exc.value.message.lower()
+
+        # Non-empty dict should pass
+        expect({"key": "value"}).not_empty()
+
+    def test_empty_set_not_empty(self):
+        """Test not_empty with empty set."""
+        with pytest.raises(ValidationError):
+            expect(set()).not_empty()
+
+        # Non-empty set should pass
+        expect({1, 2}).not_empty()
+
+    def test_empty_tuple_not_empty(self):
+        """Test not_empty with empty tuple."""
+        with pytest.raises(ValidationError):
+            expect(()).not_empty()
+
+        # Non-empty tuple should pass
+        expect((1, 2)).not_empty()
+
+    def test_zero_not_empty(self):
+        """Test not_empty with zero - should fail (falsy value)."""
+        with pytest.raises(ValidationError):
+            expect(0).not_empty()
+
+        # Non-zero should pass
+        expect(42).not_empty()
 
     def test_max_length_zero(self):
         """Test max_length=0 allows only empty."""
