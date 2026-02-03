@@ -159,7 +159,7 @@ class Expectation:
         """Assert that the value is not empty.
 
         For strings: checks that the stripped value is non-empty.
-        For collections (list, dict, set, tuple): checks length > 0.
+        For collections (list, dict, set, frozenset, tuple): checks length > 0.
         For other types: checks truthiness.
         """
         # Handle None explicitly
@@ -298,6 +298,10 @@ def check(
 
     Raises:
         ValidationError: If any validation fails (unless on_fail handles it).
+
+    Note:
+        This decorator does not support async functions. For async code,
+        call expect() directly on the result after awaiting.
 
     """
 
