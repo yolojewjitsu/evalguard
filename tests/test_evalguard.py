@@ -191,6 +191,15 @@ class TestCheck:
 
         assert long_enough() == "hello world"
 
+    def test_check_satisfies_fails(self):
+        @check(satisfies=lambda x: len(x) > 100)
+        def too_short():
+            return "short"
+
+        with pytest.raises(ValidationError) as exc:
+            too_short()
+        assert "custom check" in exc.value.message
+
     def test_check_on_fail_handler(self):
         def handler(error):
             return "fallback"
