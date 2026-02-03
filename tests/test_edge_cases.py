@@ -130,3 +130,24 @@ class TestEdgeCases:
             expect("test").not_matches("(unclosed")
         assert "Invalid regex" in exc.value.message
         assert exc.value.rule == "not_matches"
+
+    def test_satisfies_predicate_exception(self):
+        """Test that predicate exceptions are wrapped in ValidationError."""
+        def bad_predicate(value):
+            raise RuntimeError("predicate failed")
+
+        with pytest.raises(ValidationError) as exc:
+            expect("test").satisfies(bad_predicate, "my check")
+        assert "raised an exception" in exc.value.message
+        assert "predicate failed" in exc.value.message
+        assert exc.value.rule == "satisfies"
+
+    def test_satisfies_predicate_exception_cause(self):
+        """Test that the original exception is chained."""
+        def bad_predicate(value):
+            raise ValueError("original error")
+
+        with pytest.raises(ValidationError) as exc:
+            expect("test").satisfies(bad_predicate)
+        assert exc.value.__cause__ is not None
+        assert isinstance(exc.value.__cause__, ValueError)

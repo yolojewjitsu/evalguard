@@ -125,7 +125,10 @@ class Expectation:
         return self
 
     def max_length(self, length: int) -> Expectation:
-        """Assert that the value length is at most the given length."""
+        """Assert that the string representation length is at most the given length.
+
+        Note: For non-string values, this checks len(str(value)), not len(value).
+        """
         if len(self._str_value) > length:
             raise ValidationError(
                 f"Expected length <= {length}, got {len(self._str_value)}",
@@ -135,7 +138,10 @@ class Expectation:
         return self
 
     def min_length(self, length: int) -> Expectation:
-        """Assert that the value length is at least the given length."""
+        """Assert that the string representation length is at least the given length.
+
+        Note: For non-string values, this checks len(str(value)), not len(value).
+        """
         if len(self._str_value) < length:
             raise ValidationError(
                 f"Expected length >= {length}, got {len(self._str_value)}",
@@ -209,8 +215,19 @@ class Expectation:
         predicate: Callable[[Any], bool],
         description: str = "custom predicate",
     ) -> Expectation:
-        """Assert that the value satisfies the given predicate."""
-        if not predicate(self._value):
+        """Assert that the value satisfies the given predicate.
+
+        If the predicate raises an exception, it is wrapped in ValidationError.
+        """
+        try:
+            result = predicate(self._value)
+        except Exception as e:
+            raise ValidationError(
+                f"Predicate '{description}' raised an exception: {e}",
+                value=self._value,
+                rule="satisfies",
+            ) from e
+        if not result:
             raise ValidationError(
                 f"Value did not satisfy {description}",
                 value=self._value,
