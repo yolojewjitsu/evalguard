@@ -23,7 +23,7 @@ class ValidationError(Exception):
 
     """
 
-    __slots__ = ("message", "rule", "value")
+    __slots__ = ("message", "value", "rule")
 
     def __init__(
         self,
