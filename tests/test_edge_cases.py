@@ -159,3 +159,33 @@ class TestEdgeCases:
             expect("test").satisfies(bad_predicate)
         assert exc.value.__cause__ is not None
         assert isinstance(exc.value.__cause__, ValueError)
+
+    def test_compiled_pattern_matches(self):
+        """Test matches() with pre-compiled Pattern object."""
+        import re
+        pattern = re.compile(r"user_\d+")
+        expect("user_123").matches(pattern)
+
+        with pytest.raises(ValidationError):
+            expect("invalid").matches(pattern)
+
+    def test_compiled_pattern_not_matches(self):
+        """Test not_matches() with pre-compiled Pattern object."""
+        import re
+        pattern = re.compile(r"\d+")
+        expect("hello").not_matches(pattern)
+
+        with pytest.raises(ValidationError):
+            expect("hello123").not_matches(pattern)
+
+    def test_check_decorator_compiled_pattern(self):
+        """Test @check decorator with compiled Pattern objects."""
+        import re
+        select_pattern = re.compile(r"SELECT")
+        drop_pattern = re.compile(r"DROP")
+
+        @check(matches=[select_pattern], not_matches=[drop_pattern])
+        def safe_query():
+            return "SELECT * FROM users"
+
+        assert safe_query() == "SELECT * FROM users"

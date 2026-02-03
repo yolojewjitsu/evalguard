@@ -48,7 +48,7 @@ class Expectation:
 
     """
 
-    __slots__ = ("_str_value", "_value")
+    __slots__ = ("_value", "_str_value")
 
     def __init__(self, value: Any) -> None:
         """Initialize with a value to validate.
