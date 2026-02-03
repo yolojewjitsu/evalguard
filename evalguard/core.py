@@ -51,6 +51,11 @@ class Expectation:
     __slots__ = ("_str_value", "_value")
 
     def __init__(self, value: Any) -> None:
+        """Initialize with a value to validate.
+
+        Note: For bytes values, str(bytes) gives "b'...'" representation,
+        not the decoded content. Decode bytes before passing if needed.
+        """
         self._value = value
         self._str_value = str(value) if value is not None else ""
 
@@ -173,7 +178,7 @@ class Expectation:
                     rule="not_empty",
                 )
         # Handle collections: check length
-        elif isinstance(self._value, (list, dict, set, tuple)):
+        elif isinstance(self._value, (list, dict, set, frozenset, tuple)):
             if len(self._value) == 0:
                 raise ValidationError(
                     f"Expected non-empty {type(self._value).__name__}",

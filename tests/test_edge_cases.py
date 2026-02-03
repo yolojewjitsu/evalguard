@@ -59,6 +59,14 @@ class TestEdgeCases:
         # Non-empty tuple should pass
         expect((1, 2)).not_empty()
 
+    def test_empty_frozenset_not_empty(self):
+        """Test not_empty with empty frozenset."""
+        with pytest.raises(ValidationError):
+            expect(frozenset()).not_empty()
+
+        # Non-empty frozenset should pass
+        expect(frozenset([1, 2])).not_empty()
+
     def test_zero_not_empty(self):
         """Test not_empty with zero - should fail (falsy value)."""
         with pytest.raises(ValidationError):
